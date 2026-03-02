@@ -1,0 +1,131 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., v0.1.0)'
+        required: true
+        type: string
+        default: 'v0.1.0'
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  build:
+    name: Build for ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name || 'v0.1.0' }}
+    strategy:
+      matrix:
+        include:
+          # Linux
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            os_name: linux
+            arch_name: x86_64
+
+          # macOS
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            os_name: darwin
+            arch_name: x86_64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            os_name: darwin
+            arch_name: aarch64
+
+          # Windows
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            os_name: windows
+            arch_name: x86_64
+            extension: .exe
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ matrix.target }}-
+            ${{ runner.os }}-cargo-
+
+      - name: Build binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Create archive (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cp target/${{ matrix.target }}/release/cli-rs cli-rs
+          tar -czf cli-rs-${{ env.RELEASE_TAG }}-${{ matrix.os_name }}-${{ matrix.arch_name }}.tar.gz cli-rs
+
+      - name: Create archive (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          copy target\${{ matrix.target }}\release\cli-rs.exe cli-rs.exe
+          tar -czf cli-rs-${{ env.RELEASE_TAG }}-${{ matrix.os_name }}-${{ matrix.arch_name }}.tar.gz cli-rs.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-rs-${{ env.RELEASE_TAG }}-${{ matrix.os_name }}-${{ matrix.arch_name }}.tar.gz
+          path: cli-rs-${{ env.RELEASE_TAG }}-${{ matrix.os_name }}-${{ matrix.arch_name }}.tar.gz
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name || 'v0.1.0' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display downloaded files
+        run: |
+          echo "Available artifacts:"
+          ls -la artifacts/ || echo "No artifacts directory found"
+          find artifacts/ -name "*.tar.gz" -type f 2>/dev/null || echo "No tar.gz files found"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ env.RELEASE_TAG }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            artifacts/cli-rs-${{ env.RELEASE_TAG }}-linux-x86_64.tar.gz/cli-rs-${{ env.RELEASE_TAG }}-linux-x86_64.tar.gz
+            artifacts/cli-rs-${{ env.RELEASE_TAG }}-darwin-x86_64.tar.gz/cli-rs-${{ env.RELEASE_TAG }}-darwin-x86_64.tar.gz
+            artifacts/cli-rs-${{ env.RELEASE_TAG }}-darwin-aarch64.tar.gz/cli-rs-${{ env.RELEASE_TAG }}-darwin-aarch64.tar.gz
+            artifacts/cli-rs-${{ env.RELEASE_TAG }}-windows-x86_64.tar.gz/cli-rs-${{ env.RELEASE_TAG }}-windows-x86_64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
