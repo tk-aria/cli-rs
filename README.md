@@ -1,8 +1,8 @@
-# cli-rs
+# 🦀 cli-rs
 
 Rust implementation of [cli.sh](https://github.com/tk-aria/cli.sh) -- a minimal CLI subcommand framework with self-documenting help.
 
-## Install
+## 📦 Install
 
 ### Quick install (recommended)
 
@@ -17,13 +17,13 @@ curl -sSLf https://raw.githubusercontent.com/tk-aria/cli-rs/main/scripts/setup.s
   CLI_RS_VERSION=v0.1.0 CLI_RS_INSTALL_PATH=/usr/local/bin sh -s install
 ```
 
-### Uninstall
+### 🗑️ Uninstall
 
 ```bash
 curl -sSLf https://raw.githubusercontent.com/tk-aria/cli-rs/main/scripts/setup.sh | sh -s uninstall
 ```
 
-### Build from source
+### 🔨 Build from source
 
 ```bash
 git clone https://github.com/tk-aria/cli-rs.git
@@ -31,21 +31,21 @@ cd cli-rs
 cargo build --release
 ```
 
-## Usage
+## 🚀 Usage
 
 ```bash
 cli-rs <command> [arguments]
 ```
 
-## Commands
+## 📖 Commands
 
 | Command | Description |
 |---------|-------------|
-| `help` | Display help information for all available commands |
-| `version` | Display the current version |
-| `fzf` | Select and execute a subcommand interactively with fzf |
-| `hello_world` | Display "Hello, World!" |
-| `show_date` | Display the current date and time |
+| `help` | 💡 Display help information for all available commands |
+| `version` | 🏷️ Display the current version |
+| `fzf` | 🔍 Select and execute a subcommand interactively with fzf |
+| `hello_world` | 👋 Display "Hello, World!" |
+| `show_date` | 📅 Display the current date and time |
 
 ### Examples
 
@@ -69,7 +69,7 @@ cli-rs show_date
 cli-rs fzf
 ```
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 cli-rs/
@@ -85,7 +85,7 @@ cli-rs/
 └── README.md
 ```
 
-## Development
+## 🛠️ Development
 
 ```bash
 make build      # Build in debug mode
@@ -96,15 +96,15 @@ make clippy     # Run linter
 make all        # Full validation (fmt + clippy + test + release)
 ```
 
-## Supported Platforms
+## 🌍 Supported Platforms
 
 | Platform | Architecture | Status |
 |----------|-------------|--------|
-| Linux | x86_64 | Supported (musl static binary) |
-| macOS | x86_64 | Supported |
-| macOS | aarch64 (Apple Silicon) | Supported |
-| Windows | x86_64 | Supported |
+| 🐧 Linux | x86_64 | ✅ Supported (musl static binary) |
+| 🍎 macOS | x86_64 | ✅ Supported |
+| 🍎 macOS | aarch64 (Apple Silicon) | ✅ Supported |
+| 🪟 Windows | x86_64 | ✅ Supported |
 
-## License
+## 📄 License
 
 See [LICENSE](LICENSE) for details.
