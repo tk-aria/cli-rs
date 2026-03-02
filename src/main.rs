@@ -135,16 +135,17 @@ fn cmd_show_date(_args: &[String]) {
     print!("Current date and time: {}", date_str);
 }
 
+/// Find a command by name from the registry.
+fn find_command(name: &str) -> Option<&'static Command> {
+    COMMANDS.iter().find(|c| c.name == name)
+}
+
 /// Dispatch a command by name, mirroring the case statement in cli.sh.
 fn dispatch(cmd: &str, args: &[String]) {
-    for command in COMMANDS {
-        if command.name == cmd {
-            (command.handler)(args);
-            return;
-        }
+    match find_command(cmd) {
+        Some(command) => (command.handler)(args),
+        None => cmd_help(&[]),
     }
-    // Unknown command: show help (same as the * case in cli.sh)
-    cmd_help(&[]);
 }
 
 fn main() {
@@ -160,4 +161,68 @@ fn main() {
     let rest: Vec<String> = args[2..].to_vec();
 
     dispatch(cmd, &rest);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_version_constant() {
+        assert_eq!(VERSION, "v0.1.0");
+    }
+
+    #[test]
+    fn test_commands_registry_has_all_commands() {
+        let expected = ["help", "version", "fzf", "hello_world", "show_date"];
+        let names: Vec<&str> = COMMANDS.iter().map(|c| c.name).collect();
+        assert_eq!(names, expected);
+    }
+
+    #[test]
+    fn test_find_command_existing() {
+        assert!(find_command("help").is_some());
+        assert!(find_command("version").is_some());
+        assert!(find_command("fzf").is_some());
+        assert!(find_command("hello_world").is_some());
+        assert!(find_command("show_date").is_some());
+    }
+
+    #[test]
+    fn test_find_command_unknown() {
+        assert!(find_command("nonexistent").is_none());
+        assert!(find_command("").is_none());
+    }
+
+    #[test]
+    fn test_commands_have_comments() {
+        for cmd in COMMANDS {
+            assert!(
+                !cmd.comments.is_empty(),
+                "Command '{}' should have comments",
+                cmd.name
+            );
+        }
+    }
+
+    #[test]
+    fn test_hello_world_comments() {
+        let cmd = find_command("hello_world").unwrap();
+        assert_eq!(cmd.comments[0], "Example 1:");
+    }
+
+    #[test]
+    fn test_show_date_comments() {
+        let cmd = find_command("show_date").unwrap();
+        assert_eq!(cmd.comments[0], "Example 2:");
+    }
+
+    #[test]
+    fn test_ansi_color_codes() {
+        assert_eq!(PURPLE, "\x1b[35m");
+        assert_eq!(CYAN, "\x1b[36m");
+        assert_eq!(GREEN, "\x1b[32m");
+        assert_eq!(BRIGHT_GREEN, "\x1b[92m");
+        assert_eq!(RESET, "\x1b[0m");
+    }
 }
