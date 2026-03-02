@@ -43,11 +43,12 @@ _detect_arch() {
 
 # バイナリ名を決定
 _get_binary_name() {
-  os="$1"
-  case "$os" in
+  _gbn_os="$1"
+  case "$_gbn_os" in
     windows) echo "cli-rs.exe" ;;
     *) echo "cli-rs" ;;
   esac
+  unset _gbn_os
 }
 
 # ダウンロードURL生成
@@ -90,7 +91,7 @@ main() {
   # インストールディレクトリ作成
   if [ ! -d "$cli_rs_install_path" ]; then
     echo "Creating install directory: $cli_rs_install_path"
-    mkdir -p -- "$cli_rs_install_path"
+    mkdir -p "$cli_rs_install_path"
   fi
 
   # 一時ディレクトリ作成
@@ -120,7 +121,7 @@ main() {
     return 1
   fi
 
-  chmod 755 -- "$cli_rs_install_path/$cli_rs_binary"
+  chmod 755 "$cli_rs_install_path/$cli_rs_binary"
 
   echo ""
   echo "✅ cli-rs ${CLI_RS_VERSION} has been successfully installed!"
